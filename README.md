@@ -11,7 +11,8 @@ Link: [pariaspe/gazebo-playground](https://github.com/pariaspe/gazebo-playground
 - [2. Estructura de Carpetas](#2-estructura-de-carpetas)
 - [3. Base](#3-base)
 - [4. Extras](#4-extras)
-    - [4.1. Extra 1](#extra-1-prueba)
+    - [4.1. Extra 1](#extra-1-video)
+    - [4.2. Extra 2](#extra-2-prueba)
 
 ---
 
@@ -19,10 +20,11 @@ Link: [pariaspe/gazebo-playground](https://github.com/pariaspe/gazebo-playground
 Para la práctica se han realizado los siguientes hitos:
 
 - **Base**:
-    1. Lorem ipsum
+    1. Se presenta un **plugin básico** que actualizando las velocidades lineares consigue que el robot alcance la meta. El plugin se prueba sobre sobre un mapa sencillo (map1).
 
 - **Extra**:
-    1. Lorem ipsum
+    1. Se presenta un **video** que demuestra el funcionamiento de la parte base.
+    2. 
     
 ## 2. Estructura de carpetas
 El esquema de organización del reposition es el siguiente:
@@ -85,7 +87,7 @@ columns = Y = 10
 
 Se añade el Pioneer en la posición `[1.45, 1.6]` modificando a mano el archivo del mundo. Además, incluímos el plugin (`model_push`) creado para desplazar el robot hasta la meta.
 
-```
+```xml
 <sdf version="1.4">
   <world name="default">
     <light name="sun" type="directional">
@@ -117,16 +119,32 @@ Se añade el Pioneer en la posición `[1.45, 1.6]` modificando a mano el archivo
 
 ![pioneer](/doc/pioneer.png)
 
-El plugin creado es el siguiente:
+Sobre el plugin creado mostramos los cambios realizados en el método OnUpdate.
 
-```
-*code*
-```
+```c++
+    void OnUpdate()
+    {
+        ignition::math::Pose3d pose = model->WorldPose();
+        printf("At: %f %f %f\n", pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z());
 
-Finalmente se muestra en este vídeo el resultado obtenido.
+        float dx = GOAL_X - pose.Pos().X();
+        float dy = GOAL_Y - pose.Pos().Y();
 
-![video](/link/to/video)
+        float velx = dx / GOAL_X;
+        float vely = dy / GOAL_Y;
+
+        model->SetLinearVel(ignition::math::Vector3d(velx, vely, 0));
+    }
+ ```
+
+El algoritmo decide la velocidad en función de la posición del robot y la posición de la meta. Esta velocidad se normaliza para que siempre se encuentre entre `[0-1]`.
 
 ## 4. Extras
-### Extra 1: Prueba
-Lorem ipsum
+### Extra 1: Video
+
+Se muestra en vídeo el resultado de la ejecución de la parte base.
+
+ [![Gazebo Plugin Base](http://img.youtube.com/vi/cw2RJPpvA7c/0.jpg)](http://www.youtube.com/watch?v=cw2RJPpvA7c)
+ 
+ ### Extra 2: Prueba
+ Lorem ipsum
