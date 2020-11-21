@@ -12,7 +12,7 @@ Link: [pariaspe/gazebo-playground](https://github.com/pariaspe/gazebo-playground
 - [3. Base](#3-base)
 - [4. Extras](#4-extras)
     - [4.1. Extra 1](#extra-1-video)
-    - [4.2. Extra 2](#extra-2-prueba)
+    - [4.2. Extra 2](#extra-2-heading)
 
 ---
 
@@ -24,8 +24,8 @@ Para la práctica se han realizado los siguientes hitos:
 
 - **Extra**:
     1. Se presenta un **video** que demuestra el funcionamiento de la parte base.
-    2. 
-    
+    2. Control del **heading**.
+
 ## 2. Estructura de carpetas
 El esquema de organización del reposition es el siguiente:
 ```
@@ -37,20 +37,20 @@ Tras finalizar la instalación se calculan las dimensiones del mapa:
 
 ```bash
 parias@parias-msi:~/repos/gazebo-tools$ python3
-Python 3.6.9 (default, Oct  8 2020, 12:12:24) 
+Python 3.6.9 (default, Oct  8 2020, 12:12:24)
 [GCC 8.4.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 >>> x = len("arias")*2
 >>> y = len("perez")*2
 >>> print(x, y)
 10 10
->>> 
+>>>
 ```
 
 Dadas estas dimensiones `(10x10)` se ha construído el siguiente mapa en formato csv `(map1.csv)`:
 
 ```bash
-parias@parias-msi:~/repos/gazebo-tools$ cat assets/map1.csv 
+parias@parias-msi:~/repos/gazebo-tools$ cat assets/map1.csv
 1,1,1,1,1,1,1,1,1,1
 1,0,0,0,0,0,0,0,0,1
 1,0,0,0,0,0,0,0,0,1
@@ -68,7 +68,7 @@ Se ha elegido un mapa muy sencillo con una resolución de un metro por caracter.
 Utilizando `gazebo-map-from-csv.py` se genera el mundo de gazebo:
 
 ```bash
-parias@parias-msi:~/repos/gazebo-tools$ python gazebo-map-from-csv.py 
+parias@parias-msi:~/repos/gazebo-tools$ python gazebo-map-from-csv.py
 [[1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
  [1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
  [1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
@@ -145,6 +145,28 @@ El algoritmo decide la velocidad en función de la posición del robot y la posi
 Se muestra en vídeo el resultado de la ejecución de la parte base.
 
  [![Gazebo Plugin Base](http://img.youtube.com/vi/cw2RJPpvA7c/0.jpg)](http://www.youtube.com/watch?v=cw2RJPpvA7c)
- 
- ### Extra 2: Prueba
- Lorem ipsum
+
+### Extra 2: Heading
+
+Se ha mejorado el algoritmo para que el robot esté orientado en la dirección de avance. Para ello, además de implementar un control en velocidad lineal, se añade un control en velocidad angular, en concreto en guiñada (yaw).
+
+```c++
+void OnUpdate()
+{
+    ignition::math::Pose3d pose = model->WorldPose();
+    printf("At: %f %f %f %f %f %f\n", pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z(), pose.Rot().Roll(), pose.Rot().Pitch(), pose.Rot().Yaw());
+
+    float dx = GOAL_X - pose.Pos().X();
+    float dy = GOAL_Y - pose.Pos().Y();
+
+    float goal_yaw = atan2(dy, dx);
+
+    float velx = (GOAL_X - pose.Pos().X()) / GOAL_X;
+    float vely = (GOAL_Y - pose.Pos().Y()) / GOAL_Y;
+
+    float v_yaw = goal_yaw - pose.Rot().Yaw();
+
+    model->SetLinearVel(ignition::math::Vector3d(velx, vely, 0));
+    model->SetAngularVel(ignition::math::Vector3d(0, 0, v_yaw));
+}
+```
