@@ -13,6 +13,8 @@ Link: [pariaspe/gazebo-playground](https://github.com/pariaspe/gazebo-playground
 - [4. Extras](#4-extras)
     - [4.1. Extra 1](#extra-1-video)
     - [4.2. Extra 2](#extra-2-heading)
+    - [4.3. Extra 3](#extra-3-control-con-pid)
+
 
 ---
 
@@ -25,6 +27,7 @@ Para la práctica se han realizado los siguientes hitos:
 - **Extra**:
     1. Se presenta un **video** que demuestra el funcionamiento de la parte base.
     2. Control del **heading**.
+    3. Control mediante **PID**.
 
 ## 2. Estructura de carpetas
 El esquema de organización del reposition es el siguiente:
@@ -127,10 +130,10 @@ Sobre el plugin creado mostramos los cambios realizados en el método OnUpdate.
         ignition::math::Pose3d pose = model->WorldPose();
         printf("At: %f %f %f\n", pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z());
 
-        float dx = GOAL_X - pose.Pos().X();
+        float dx = GOAL_X - pose.Pos().X();  // Distancia a meta
         float dy = GOAL_Y - pose.Pos().Y();
 
-        float velx = dx / GOAL_X;
+        float velx = dx / GOAL_X;  // Normalizamos
         float vely = dy / GOAL_Y;
 
         model->SetLinearVel(ignition::math::Vector3d(velx, vely, 0));
@@ -156,17 +159,47 @@ void OnUpdate()
     ignition::math::Pose3d pose = model->WorldPose();
     printf("At: %f %f %f %f %f %f\n", pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z(), pose.Rot().Roll(), pose.Rot().Pitch(), pose.Rot().Yaw());
 
-    float dx = GOAL_X - pose.Pos().X();
+    float dx = GOAL_X - pose.Pos().X();  // Distancia a meta
     float dy = GOAL_Y - pose.Pos().Y();
 
-    float goal_yaw = atan2(dy, dx);
+    float goal_yaw = atan2(dy, dx);  // Heading a la meta
 
-    float velx = (GOAL_X - pose.Pos().X()) / GOAL_X;
-    float vely = (GOAL_Y - pose.Pos().Y()) / GOAL_Y;
+    float velx = dx / GOAL_X;  // Normalizamos
+    float vely = dy / GOAL_Y;
 
-    float v_yaw = goal_yaw - pose.Rot().Yaw();
+    float v_yaw = goal_yaw - pose.Rot().Yaw();  // Corregimos el heading actual
 
     model->SetLinearVel(ignition::math::Vector3d(velx, vely, 0));
     model->SetAngularVel(ignition::math::Vector3d(0, 0, v_yaw));
 }
 ```
+
+### Extra 3: Control con PID
+
+El control del plugin se modifica añadiendo un controlador PID que fija las velocidades en función de la posición actual del robot y de la meta.
+
+```c++
+void OnUpdate()
+{
+    ignition::math::Pose3d pose = model->WorldPose();
+    printf("At: %f %f %f %f %f %f\n", pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z(), pose.Rot().Roll(), pose.Rot().Pitch(), pose.Rot().Yaw());
+
+    float dx = GOAL_X - pose.Pos().X();  // Distancia a meta
+    float dy = GOAL_Y - pose.Pos().Y();
+
+    float goal_yaw = atan2(dy, dx);  // Heading a la meta
+    pid_yaw.set_point = goal_yaw;
+
+    float v_yaw = pid_yaw.update(pose.Rot().Yaw()); // Actualizamos las velocidades
+    float velx = pidx.update(pose.Pos().X());
+    float vely = pidy.update(pose.Pos().Y());
+
+    velx = velx / 10;  // Reducimos las velocidades obtenidas
+    vely = vely / 10;
+
+    model->SetLinearVel(ignition::math::Vector3d(velx, vely, 0));
+    model->SetAngularVel(ignition::math::Vector3d(0, 0, v_yaw));
+}
+```
+
+El código completo con la declaración de la clase `PID()` junto con las instanciaciones y las inicializaciones de los objetos `pidx`, `pidy` y `pid_yaw` se puede ver en el archivo `model_push.c`.
