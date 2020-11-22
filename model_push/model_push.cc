@@ -127,18 +127,17 @@ public:
         ignition::math::Pose3d pose = model->WorldPose();
         printf("At: %f %f %f %f %f %f\n", pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z(), pose.Rot().Roll(), pose.Rot().Pitch(), pose.Rot().Yaw());
 
-        float dx = GOAL_X - pose.Pos().X();
+        float dx = GOAL_X - pose.Pos().X();  // Distancia a meta
         float dy = GOAL_Y - pose.Pos().Y();
 
         float goal_yaw = atan2(dy, dx);  // Heading a la meta
         pid_yaw.set_point = goal_yaw;
 
-        float v_yaw = pid_yaw.update(pose.Rot().Yaw()); // Actualización de las velocidades
+        float v_yaw = pid_yaw.update(pose.Rot().Yaw()); // Actualizamos las velocidades
         float velx = pidx.update(pose.Pos().X());
         float vely = pidy.update(pose.Pos().Y());
 
-        // Reducimos las velocidades obtenidas
-        velx = velx / 10;
+        velx = velx / 10;  // Reducimos las velocidades obtenidas
         vely = vely / 10;
 
         model->SetLinearVel(ignition::math::Vector3d(velx, vely, 0));
