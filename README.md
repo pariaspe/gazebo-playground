@@ -14,7 +14,8 @@ Link: [pariaspe/gazebo-playground](https://github.com/pariaspe/gazebo-playground
     - [4.1. Extra 1](#extra-1-video)
     - [4.2. Extra 2](#extra-2-heading)
     - [4.3. Extra 3](#extra-3-control-con-pid)
-
+    - [4.4. Extra 4](#extra-4-nuevo-mapa)
+    - [4.4. Extra 5](#extra-5-video-extra)
 
 ---
 
@@ -28,11 +29,30 @@ Para la práctica se han realizado los siguientes hitos:
     1. Se presenta un **video** que demuestra el funcionamiento de la parte base.
     2. Control del **heading**.
     3. Control mediante **PID**.
+    4. Nuevo **mapa**. El mapa base se ha modificado con nuevos modelos.
+    5. **Vídeo** de la parte **extra**.
 
 ## 2. Estructura de carpetas
-El esquema de organización del reposition es el siguiente:
+El esquema de organización del repositorio es el siguiente:
 ```
-*dirs*
+.
++-- doc (imgs...)
++-- model_push
+    +-- CMakeLists.txt
+    +-- model_push.cc
+    +-- model_push.world
+    +-- README.md
++-- tools
+    +-- assets
+        +-- map1.csv
+    +-- models
+        +-- construction_cone (materials, meshes, sdfs..)
+        +-- grass_plane (materials, config, sdf)
+        +-- iris_fool (sdf, config)
+        +-- logo (materials, config, sdf)
+    +-- gazebo-map-from-csv.py
+    +-- map.world.xml
++-- README.md
 ```
 
 ## 3. Base
@@ -203,3 +223,125 @@ void OnUpdate()
 ```
 
 El código completo con la declaración de la clase `PID()` junto con las instanciaciones y las inicializaciones de los objetos `pidx`, `pidy` y `pid_yaw` se puede ver en el archivo `model_push.c`.
+
+### Extra 4: Nuevo mapa
+
+El mapa se ha modificado incluyendo nuevos modelos y modificando alguno ya existente. El nuevo mundo se puede ver en la siguiente imagen.
+
+![mundo](/doc/mundo-extra.png)
+
+El mapa se ha modificado editando el fichero `map.world.xml`. En el fichero se han incluido un nuevo suelo (sustituyendo al anterior), un logo de la UC3M, tres conos de construcción y un drone iris, todos como modelos sdf. Además, las cajas `box_0_0` y `box_9_9` han sido editadas añadiendoles un material que les da color.
+
+Sobre los modelos es importante destacar:
+
+- El suelo (`grass_plane`) y los conos (`construction_cone`) se han cogido de la librería de modelos de gazebo y no han sido modificados [[1]](https://github.com/osrf/gazebo_models).
+- El drone iris (`iris_fool`) se ha cogido de la librería de modelos de PX4 y ha sido modificado comentando los plugins de control del drone que no son necesarios en este ejemplo [[2]](https://github.com/PX4/PX4-SITL_gazebo/tree/cd8ba25c81f32d6fe088482e37f8a38892209ef4/models).
+- El modelo del logo (`logo`) ha sido creado integramente por mí y la imagen usada como textura en el material se ha obtenido de la página oficial de la UC3M bajo licencia CC [[3]](http://ocw.uc3m.es/ingenieria-informatica/ingenieria-de-la-informacion/imagenes/logo_uc3m.jpg/view).
+
+Por otro lado los materiales utilizados para colorear ambas cajas se han cogido de los materiales estándar de Gazebo [[4]](http://wiki.ros.org/simulator_gazebo/Tutorials/ListOfMaterials).
+
+Por tanto, para una correcta ejecución del código es necesario copiar los modelos `iris_fool` y `logo` al directorio `~/.gazebo/models` o incluir la ruta de los modelos a la variable de entorno `GAZEBO_MODEL_PATH`. Además de estos dos modelos, también se incluyen `grass_plane` y `construction_cone` al directorio `tools/models` de este repositorio.
+
+El mundo resultante con estos modelos es el siguiente:
+
+```xml
+<sdf version="1.4">
+  <world name="default">
+
+	<!-- Light Sun -->
+    <light name="sun" type="directional">
+      <cast_shadows>1</cast_shadows>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.5 -1</direction>
+    </light>
+
+	<!-- Pioneer -->
+	<include>
+	  <uri>model://pioneer</uri>
+	  <pose>1.45 1.6 0 0 0 0</pose>
+      <plugin name="model_push" filename="libmodel_push.so"/>
+	</include>
+
+	<!-- Floor -->
+	<include>
+		<uri>model://grass_plane</uri>
+	</include>
+
+	<!-- uc3m logo -->
+	<include>
+		<name>logo</name>
+		<uri>model://logo</uri>
+		<pose>5 3 1 0 0 1.5708</pose>
+	</include>
+
+	<!-- cones -->
+	<include>
+		<name>cone1</name>
+		<uri>model://construction_cone</uri>
+		<pose>0.5 9.5 1 0 0 0</pose>
+	</include>
+	<include>
+		<name>cone2</name>
+		<uri>model://construction_cone</uri>
+		<pose>7.5 2.5 0 0 0 0</pose>
+	</include>
+	<include>
+		<name>cone3</name>
+		<uri>model://construction_cone</uri>
+		<pose>5.5 5.5 0 0 0 0</pose>
+	</include>
+
+	<!-- Iris drone -->
+	<include>
+		<name>drone</name>
+		<uri>model://iris_fool</uri>
+		<pose>9.5 0.5 1.075 0 0 0</pose>
+	</include>
+
+    <!-- Boxes -->
+    <model name="box_0_0">
+      <pose>0.5 0.5 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+
+		  <material>
+		    <script>
+		      <uri>file://media/materials/scripts/gazebo.material</uri>
+		      <name>Gazebo/Red</name>
+		    </script>
+		  </material>
+        </visual>
+      </link>
+    </model>
+
+    ...
+
+  </world>
+</sdf>
+```
+
+### Extra 5: Vídeo extra
+
+Se muestra en vídeo el resultado de la ejecución con todos los extras realizados. En el se puede observar el nuevo mundo, el control del heading y el uso de PID para el control de las velocidades del robot. Además, en el video se puede observar que pese a colisionar con un objeto móvil como el cono el robot llega a su destino.
+
+ [![Gazebo Plugin Base](http://img.youtube.com/vi/pki9Rzygo4M/0.jpg)](http://www.youtube.com/watch?v=pki9Rzygo4M)

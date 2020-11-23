@@ -1,0 +1,27 @@
+<?xml version='1.0'?>
+<sdf version='1.4'>
+  <model name='logo'>
+    <static>true</static>
+    <link name='link'>
+    	<visual name='visual_0'>
+    	    <pose>0 0 0.001 0 0 0</pose>
+
+    	    <cast_shadows>false</cast_shadows>
+    	    <geometry>
+    	      	<plane>
+    	        	<normal>0 0 1</normal>
+    	        	<size>2 2</size>
+    	    	</plane>
+    		</geometry>
+        	<material>
+          		<script>
+            		<uri>model://logo/materials/scripts</uri>
+            		<uri>model://logo/materials/textures</uri>
+            		<name>vrc/logo</name>
+        		</script>
+      		</material>
+    	</visual>
+  	</link>
+  </model>
+</sdf>
+
