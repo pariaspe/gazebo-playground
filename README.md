@@ -15,7 +15,7 @@ Link: [pariaspe/gazebo-playground](https://github.com/pariaspe/gazebo-playground
     - [4.2. Extra 2](#extra-2-heading)
     - [4.3. Extra 3](#extra-3-control-con-pid)
     - [4.4. Extra 4](#extra-4-nuevo-mapa)
-    - [4.4. Extra 5](#extra-5-video-extra)
+    - [4.4. Extra 5](#extra-5-vídeo-extra)
 
 ---
 
